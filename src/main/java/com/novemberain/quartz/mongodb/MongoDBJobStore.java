@@ -535,7 +535,7 @@ public class MongoDBJobStore implements JobStore, Constants {
       throws JobPersistenceException {
     BasicDBObject query = new BasicDBObject();
     query.put(TRIGGER_NEXT_FIRE_TIME, new BasicDBObject("$lte", noLaterThanDate));
-
+    query.put(TRIGGER_STATE, STATE_WAITING);
     DBCursor cursor = triggerCollection.find(query);
 
     BasicDBObject sort = new BasicDBObject();
@@ -655,6 +655,7 @@ public class MongoDBJobStore implements JobStore, Constants {
       }
 
       Date prevFireTime = trigger.getPreviousFireTime();
+      trigger.triggered(cal);
 
       TriggerFiredBundle bndle = new TriggerFiredBundle(retrieveJob(
           trigger), trigger, cal,
@@ -680,7 +681,6 @@ public class MongoDBJobStore implements JobStore, Constants {
           }
           
           results.add(new TriggerFiredResult(bndle));
-          trigger.triggered(cal);
           storeTrigger(trigger, true);
         }
         catch (DuplicateKey dk) {
